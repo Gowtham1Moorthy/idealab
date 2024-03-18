@@ -1,27 +1,44 @@
-const { verifyAlradyHaveAccount } = require("../sqlStatments/selecthostfaculty")
+const { verifyPassword } = require("../sqlStatments/findallforLogin");
+const router = require("express").Router();
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
 
-const login = (email, password) =>{
-    const result = verifyAlradyHaveAccount(email);
-    if(result.length() > 0){
-        const verify = bcrypt.compare(password, result.password);
+router.post("/login", verifyPassword, async (req, res) => {
+    try {
+        if (req.password && req.password.length >= 1) {
+            const verify = await bcrypt.compare(req.body.password, req.password);
 
-        if(verify){
+            if (verify) {
+                const { email, table } = req.body;
 
-            const paylode = {
-                email
+                const payload = {
+                    email,
+                    table,
+                };
+
+                const key = 'idealab';
+                const options = {
+                    expiresIn: "7d",
+                };
+                
+                const token = jwt.sign(payload, key, options);
+
+                console.log(token);
+                console.log(req.password);
+
+                res.send({ token });
+            } else {
+
+                res.status(401).json({ message: "Invalid credentials" });
             }
+        } else {
 
-            const key = 'idealab'
-
-            const options = {
-                expiresIn: "7d",
-            }
-
-            const token = jwt.sign(paylode, key, options);
-
-            
+            res.status(400).json({ message: "Invalid request. Password missing or empty." });
         }
+    } catch (error) {
+        console.error("Error during login:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
-}
+});
+
+module.exports = router;

@@ -20,7 +20,7 @@ function App() {
   const [r, setr] = useState("");
 
 useEffect(()=>{
-  axios.post("/update", a).catch(err=>{
+  axios.post("/login", a).catch(err=>{
     console.log(err);
   })
 }, []);
